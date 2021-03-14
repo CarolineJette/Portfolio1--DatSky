@@ -16,6 +16,9 @@ port = int(sys.argv[2])
 
 sock.connect((ip, port))
 
+def alice(a, b = None):
+        return "I think {} sounds great!".format(a + "ing")
+
 while True:
     socket_list = [sys.stdin, sock]
     read_sockets, write_sockets, error_socket = select.select(socket_list, [], [])
@@ -23,6 +26,9 @@ while True:
     for sockets in read_sockets:
         msg = sockets.recv(1024).decode()
         print(msg)
+
+
+
 
 sock.close()
 #sock.sendall(b"Hello world")
@@ -36,8 +42,7 @@ sock.close()
     #reply = sock.recv(1024).decode()
     #print("Server replied: {}".format(reply))
     #data, (addr, port) = sock.recvfrom(1024)
-    #def alice(a, b = None):
-    #    return "I think {} sounds great!".format(a + "ing")
+    
 
     #action = random.choice(["work", "play", "eat", "cry", "sleep", "fight"])
     #data, (addr, port) = sock.recvfrom(1024)
