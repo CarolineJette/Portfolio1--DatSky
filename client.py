@@ -17,16 +17,17 @@ port = int(sys.argv[2])
 #bot={'bot_str':bot_str}
 bot = str(sys.argv[3])
 
-dispatcher = { 'bot' : bot }
-def call_func(x, func):
-    try:
-        return dispatcher[func](x)
-    except:
-        return "Invalid function"
+
+#dispatcher = { 'bot' : bot }
+#def call_func(x, func):
+ #   try:
+  #      return dispatcher[func](x)
+   # except:
+    #    return "Invalid function"
 sock.connect((ip, port))
 
 def amy(a, b = None):
-        return "Amy: I think {} sounds great!".format(a + "ing")
+        return "I think {} sounds great!".format(a + "ing")
 
 while True:
     socket_list = [sys.stdin, sock]
@@ -37,9 +38,11 @@ while True:
         print(msg)
         split_msg = msg.split()
         action = split_msg[6]
-        reply = "{}".format(call_func(action, 'bot'))
-        print(reply)
-        sock.sendto(reply.encode(), ("localhost", 4242))
+        if bot == "amy":
+            reply = "{}".format(amy(action))
+            print("Me: " + reply)
+        sock.sendto(("Amy: " + reply).encode(), ("localhost", 4242))
+        
 
 sock.close()
 #sock.sendall(b"Hello world")
