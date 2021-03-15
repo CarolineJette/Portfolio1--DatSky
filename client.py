@@ -29,6 +29,9 @@ sock.connect((ip, port))
 def amy(a, b = None):
         return "I think {} sounds great!".format(a + "ing")
 
+def jake(a, b = None):
+        return "Omg, {} is laaame".format(a + "ing")
+
 while True:
     socket_list = [sys.stdin, sock]
     read_sockets, write_sockets, error_socket = select.select(socket_list, [], [])
@@ -41,7 +44,12 @@ while True:
         if bot == "amy":
             reply = "{}".format(amy(action))
             print("Me: " + reply)
-        sock.sendto(("Amy: " + reply).encode(), ("localhost", 4242))
+            sock.sendto(("Amy: " + reply).encode(), ("localhost", 4242))
+        if bot == "jake":
+            reply = "{}".format(jake(action))
+            print("Me: " + reply)
+            sock.sendto(("Jake: " + reply).encode(), ("localhost", 4242))
+        
         
 
 sock.close()
