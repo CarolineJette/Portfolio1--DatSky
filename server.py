@@ -19,13 +19,13 @@ list_of_clients = []
 
 def clientthread(conn, addr):
     action = random.choice(["sing", "drink", "clean", "eat", "sleep", "study", "think", "work"])
-    msg = "Host: Can we {}, please? ".format(action)
+    msg = "Host: Do you guys want to {} today? ".format(action)
     print(msg)
     conn.sendall(msg.encode())
 
     while True:
         try:
-            answer = conn.recv(1024)
+            answer = conn.recv(1024).decode()
             if answer:
                 print("<" + addr[0] + "> " + answer)
                 answer_to_send = "<" + addr[0] + "> " + answer
