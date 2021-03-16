@@ -2,10 +2,9 @@ import socket
 import random
 import select
 import sys
+import threading
 
 print("Dette er en klient")
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 if len(sys.argv) != 4:
     print("Correct usage: script, IP adress, port number, bot")
@@ -13,17 +12,9 @@ if len(sys.argv) != 4:
 
 ip = str(sys.argv[1])
 port = int(sys.argv[2])
-#bot_str = str(sys.argv[3])
-#bot={'bot_str':bot_str}
 bot = str(sys.argv[3])
 
-
-#dispatcher = { 'bot' : bot }
-#def call_func(x, func):
- #   try:
-  #      return dispatcher[func](x)
-   # except:
-    #    return "Invalid function"
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((ip, port))
 
 def amy(a, b = None):
@@ -32,27 +23,59 @@ def amy(a, b = None):
 def jake(a, b = None):
         return "Omg, {} is laaame".format(a + "ing")
 
-while True:
-    socket_list = [sys.stdin, sock]
-    read_sockets, write_sockets, error_socket = select.select(socket_list, [], [])
+def receive():
+    while True:
+        try:
+            message = sock.recv(1024).decode('ascii')
+            if message == 'BOT':
+                sock.send(bot.encode('ascii'))
+            else:
+                print(message)
+        except:
+            print("An error occured!")
+            sock.close()
+            break
 
-    for sockets in read_sockets:
-        msg = sockets.recv(1024).decode()
-        print(msg)
-        split_msg = msg.split()
-        action = split_msg[6]
+def write():
+    while True:
         if bot == "amy":
-            reply = "{}".format(amy(action))
-            print("Me: " + reply)
-            sock.sendto(("Amy: " + reply).encode(), ("localhost", 4242))
-        if bot == "jake":
-            reply = "{}".format(jake(action))
-            print("Me: " + reply)
-            sock.sendto(("Jake: " + reply).encode(), ("localhost", 4242))
-        
-        
+            message = '{}: {}'.format(bot, amy(action))
 
-sock.close()
+        if bot == "jake":
+            message = '{}: {}'.format(bot, jake(action))
+        
+        sock.send(message.encode('ascii'))
+
+receive_thread = threading.Thread(target=receive)
+receive_thread.start()
+write_thread = threading.Thread(target=write)
+write_thread.start()
+
+
+#while True:
+#    socket_list = [sys.stdin, sock]
+#    read_sockets, write_sockets, error_socket = select.select(socket_list, [], [])
+
+#    for sockets in read_sockets:
+#        msg = sockets.recv(1024).decode()
+#        print(msg)
+#        split_msg = msg.split()
+#        action = split_msg[6]
+        
+        
+#    for sockets in write_sockets:
+#        if bot == "amy":
+#            reply = "{}".format(amy(action))
+#            print("Me: " + reply)
+#            sock.sendto(("Amy: " + reply).encode(), ("localhost", 4242))
+#        if bot == "jake":
+#            reply = "{}".format(jake(action))
+#            print("Me: " + reply)
+#            sock.sendto(("Jake: " + reply).encode(), ("localhost", 4242))
+
+#sock.close()
+
+
 #sock.sendall(b"Hello world")
 #data = sock.recv(1024)
 
