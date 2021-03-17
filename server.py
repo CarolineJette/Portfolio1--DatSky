@@ -1,109 +1,68 @@
 import socket
-import random
+import select
 import sys
-import threading
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-if len(sys.argv)!=2:
-    print("Correct usage: script, port number")
-
+HEADER_LENGTH = 10
+IP = "127.0.0.1"
 Port = int(sys.argv[1])
 
-print("Dette er serveren")
-sock.bind(("127.0.0.1", Port))
-sock.listen()
-#conn, addr = sock.accept()
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-list_of_clients = []
-list_of_bots = []
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server_socket.bind((IP, Port))
+server_socket.listen()
 
-def handle(client):
-    while True:
-        try:
-            message = client.recv(1024)
-            broadcast(message)
-        except:
-            index = list_of_clients.index(client)
-            list_of_clients.remove(client)
-            client.close()
-            bot = list_of_clients[index]
-            broadcast('{} left!'.format(bot).encode('ascii'))
-            list_of_bots.remove(bot)
-            break
-#def clientthread(conn, addr):
-#    action = random.choice(["sing", "drink", "clean", "eat", "sleep", "study", "think", "work"])
-#    msg = "Host: Do you guys want to {} today? ".format(action)
-#    print(msg)
-#    conn.sendall(msg.encode())
+sockets_list = [server_socket]
 
-#    while True:
-#        try:
-#            answer = conn.recv(1024).decode()
-#            if answer:
-#                print("<" + addr[0] + "> " + answer)
-#                answer_to_send = "<" + addr[0] + "> " + answer
-#                broadcast(answer_to_send, conn)
-#            else:
-#                removeconn(conn)
-#        except:
-#            continue
+clients = {}
 
-def broadcast(msg):
-    for client in list_of_clients:
-        client.send(msg)
-#def broadcast(msg, conn):
-#    for client in list_of_clients:
-#        if client!=conn:
-#            try:
-#                client.send(msg)
-#            except:
-#                client.close()
-#                removeconn(client)
 
-#def removeconn(conn):
-#    if conn in list_of_clients:
-#        list_of_clients.remove(conn)
+def receive_message(client_socket):
+    try:
+        message_header = client_socket.recv(HEADER_LENGTH)
 
-def receive():
-    while True:
-        client, addr = sock.accept()
-        print("Connected with {}".format(str(addr)))
-        client.send('BOT'.encode('ascii'))
-        bot = client.recv(1024).decode('ascii')
-        list_of_bots.append(bot)
-        list_of_clients.append(client)
-        print("Bots' name is {}".format(bot))
-        broadcast("{} joined!".format(bot).encode('ascii'))
-        client.send('Connected to server!'.encode('ascii'))
-        thread = threading.Thread(target=handle, args=(client,))
-        thread.start()
-#while True:
-#    conn, addr = sock.accept()
-#    list_of_clients.append(conn)
-    #print(addr[0] + " connected")
-
-#    start_new_thread(clientthread, (conn, addr))
-
-#conn.close()
-#sock.close()
-
-receive()
-
-#with conn: 
-    #print("Connected by ", addr)
-    #while True:
-        #data = conn.recv(1024)
-        #if not data:
-         #   break
-
-        #conn.sendall(data)
-        #print("Awaiting message...")
+        if not len(message_header):
+            return False
         
-        #print("Message from {}:{}\nContent: {}".format(addr, port, data.decode()))
-        #action = random.choice(["sing", "drink", "clean", "eat", "sleep", "study", "think", "work"])
-        #msg = "Host: Can we {}, please? ".format(action)
-        #print(msg)
-        #data, (addr, port) = conn.recvfrom(1024)
-        #conn.sendto(action.encode(), (addr, port))
-        #print(addr, port, data.decode())
+        message_length = int(message_header.decode('utf-8'))
+        return {"header": message_header, "data": client_socket.recv(message_length)}
+
+    except:
+        return False
+
+
+while True:
+    read_sockets, _, exception_sockets = select.select(sockets_list, [], sockets_list)
+
+    for notified_socket in read_sockets:
+        if notified_socket == server_socket:
+            client_socket, client_address = server_socket.accept()
+
+            user = receive_message(client_socket)
+            if user is False:
+                continue
+            
+            sockets_list.append(client_socket)
+            clients[client_socket] = user
+
+            print("{} joined the chat! Address: {}:{}".format(user['data'].decode('utf-8'), client_address[0], client_address[1]))
+        
+        else:
+            message = receive_message(notified_socket)
+
+            if message is False:
+                print("Closed connection from {}".format(clients[notified_socket]['data'].decode('utf-8')))
+                sockets_list.remove(notified_socket)
+                del clients[notified_socket]
+                continue
+            
+            user = clients[notified_socket]
+            print("{}: {}".format(user['data'].decode('utf-8'), message['data'].decode('utf-8')))
+
+            for client_socket in clients:
+                if client_socket != notified_socket:
+                    client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
+    
+    for notified_socket in exception_sockets:
+        sockets_list.remove(notified_socket)
+        del clients[notified_socket]
