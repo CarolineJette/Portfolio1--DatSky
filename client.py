@@ -69,3 +69,5 @@ while True:
 
     client_socket.send(message.encode())
     print(message)
+
+#Code by Caroline Sofie Jetteberg, s313564 OsloMet

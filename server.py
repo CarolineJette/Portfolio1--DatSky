@@ -41,3 +41,6 @@ for i in connected:
     for r in connected:
         if r != i:
             r.send(b"Bot:" + message.encode())
+
+
+#Code by Caroline Sofie Jetteberg, s313564 OsloMet
