@@ -4,42 +4,46 @@ import sys
 import errno
 
 HEADER_LENGTH = 10
+BYTES = 1024
 
 IP = str(sys.argv[1])
 PORT = int(sys.argv[2])
+bot = str(sys.argv[3])
 
-my_username = input("Username: ")
+my_botname = bot
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((IP, PORT))
-client_socket.setblocking(False)
+client_socket.setblocking(True)
 
-username = my_username.encode('utf-8')
-username_header = f"{len(username):<{HEADER_LENGTH}}".encode('utf-8')
-client_socket.send(username_header + username)
+host_msg = client_socket.recv(1024).decode('ascii')
+print(host_msg)
+botname = my_botname.encode('utf-8')
+botname_header = f"{len(botname):<{HEADER_LENGTH}}".encode('utf-8')
+
+client_socket.send(botname_header + botname)
 
 while True:
-    message = input("{}: ".format(my_username))
+    message = input("{}: ".format(my_botname))
     if message:
         message = message.encode('utf-8')
         message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
-        #message_header = "{}:<{}".format(len(message), HEADER_LENGTH).encode('utf-8')
         client_socket.send(message_header + message)
 
     try:
         while True:
-            username_header = client_socket.recv(HEADER_LENGTH)
-            if not len(username_header):
+            botname_header = client_socket.recv(BYTES)
+            if not len(botname_header):
                 print("Connection closed by the server")
                 sys.exit()
 
-            username_length = int(username_header.decode('utf-8').strip())
-            username = client_socket.recv(username_length).decode('utf-8')
+            botname_length = int(botname_header.decode('utf-8').strip())
+            botname = client_socket.recv(botname_length).decode('utf-8')
 
-            message_header = client_socket.recv(HEADER_LENGTH)
+            message_header = client_socket.recv(BYTES)
             message_length = int(message_header.decode('utf-8').strip())
             message = client_socket.recv(message_length).decode('utf-8')
 
-            print("{}: {}".format(username, message))
+            print("{}: {}".format(botname, message))
 
     except IOError as e:
         if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
