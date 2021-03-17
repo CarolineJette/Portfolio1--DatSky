@@ -1,6 +1,7 @@
 import socket
 import sys
 import random
+import time
 
 if len(sys.argv) != 4:
     print("Correct usage: script, IP adress, port number, bot")
@@ -15,20 +16,22 @@ client_socket.connect((IP, PORT))
 
 good_things = ["party", "drink", "scream", "eat", "catch", "sing", "sleep", "think"]
 bad_things = ["cry", "steal", "beat", "clean", "study", "work"]
-random_action = random.choice(["sleep", "paint a wall", "wash my clothes", "kick a ball"])
+random_action = random.choice(["die", "paint a wall", "wash my clothes", "kick a ball"])
 
 def amy(a):
     if a in bad_things:
         return "Amy: I don't think {} is such a great idea... Can't we do anything else, such as {}?".format(a + "ing", random.choice(good_things))
     else:
         return "Amy: I think {} sounds great!".format(a + "ing")
-def jake(a):
+def jake(a, b = None):
     if a in bad_things:
         return "Jake: Omg, {} is the beeest!".format(a + "ing")
     else:
-        return "Jake: Omg, {} is laaame.".format(a + "ing")
+        return "Jake: Omg, {} is laaame, let's go {} instead".format(a + "ing", b + "ing")
 def roza(a, b):
-    return "Roza: I will rather {} than {}...".format(b, a)
+    return "Roza: I will rather {} than {}, but whatever...".format(b, a)
+def holt(a):
+    return "Captain Holt: I don't appreciate {}.".format(a + "ing")
 
 
 while True:
@@ -50,9 +53,11 @@ while True:
     if bot == 'Amy':
         message = "{}".format(amy(action))
     elif bot == 'Jake':
-        message = "{}".format(jake(action))
+        message = "{}".format(jake(action, random_action))
     elif bot == 'Roza':
         message = "{}".format(roza(action, random_action))
+    elif bot == 'Holt':
+        message = "{}".format(holt(action))
     else:
         message = "Host: {} the Bot isn't here today".format(bot)
 
