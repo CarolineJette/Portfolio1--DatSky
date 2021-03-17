@@ -2,6 +2,10 @@ import socket
 import sys
 import random
 
+if len(sys.argv)!=2:
+    print("Correct usage: script, port number")
+    exit()
+
 IP = "127.0.0.1"
 Port = int(sys.argv[1])
 
@@ -20,7 +24,7 @@ while not stop_while:
     if message == 'n':
         stop_while = True
 
-action = random.choice(["sing", "drink", "clean", "eat", "sleep", "study", "think", "work"])
+action = random.choice(["sing", "drink", "clean", "eat", "sleep", "study", "think", "work", "party", "scream", "steal", "beat", "catch", "cry"])
 host_msg = "Host: Do you guys want to {} today? ".format(action)
 print(host_msg)
 
