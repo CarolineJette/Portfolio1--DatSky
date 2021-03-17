@@ -1,86 +1,65 @@
 import socket
-import select
 import sys
-import errno
-import threading
+import random
+import time
 
-HEADER_LENGTH = 10
-BYTES = 1024
+if len(sys.argv) != 4:
+    print("Correct usage: script, IP adress, port number, bot")
+    exit()
 
 IP = str(sys.argv[1])
 PORT = int(sys.argv[2])
 bot = str(sys.argv[3])
 
-def amy(a, b = None):
-        return "I think {} sounds great!".format(a + "ing")
-
-def jake(a, b = None):
-        return "Omg, {} is laaame".format(a + "ing")
-
-my_botname = bot
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((IP, PORT))
-client_socket.setblocking(True)
 
-host_msg = client_socket.recv(1024).decode('ascii')
-print(host_msg)
-split_msg = host_msg.split()
-action = split_msg[6]
+good_things = ["party", "drink", "scream", "eat", "catch", "sing", "sleep", "think"]
+bad_things = ["cry", "steal", "beat", "clean", "study", "work"]
+random_action = random.choice(["die", "paint a wall", "wash my clothes", "kick a ball"])
 
-botname = my_botname.encode('utf-8')
-botname_header = f"{len(botname):<{HEADER_LENGTH}}".encode('utf-8')
+def amy(a):
+    if a in bad_things:
+        return "Amy: I don't think {} is such a great idea... Can't we do anything else, such as {}?".format(a + "ing", random.choice(good_things))
+    else:
+        return "Amy: I think {} sounds great!".format(a + "ing")
+def jake(a, b = None):
+    if a in bad_things:
+        return "Jake: Omg, {} is the beeest!".format(a + "ing")
+    else:
+        return "Jake: Omg, {} is laaame, let's go {} instead".format(a + "ing", b + "ing")
+def roza(a, b):
+    return "Roza: I will rather {} than {}, but whatever...".format(b, a)
+def holt(a):
+    return "Captain Holt: I don't appreciate {}.".format(a + "ing")
 
-client_socket.send(botname_header + botname)
 
 while True:
-    #message = input("{}: ".format(my_botname))
-    #message = "{}".format(amy(action))
-    
-
-    if bot == 'Amy':
-        #message = "Amy: Hallo!"
-        message = "{}".format(amy(action))
-    elif bot == 'Jake':
-        message = "{}".format(jake(action))
+    host_msg = client_socket.recv(1024).decode('ascii')
+    if "Bot:" in host_msg:
+        print(host_msg[4:])
+        continue
     else:
-        message = "Ingen av botene sier noe"
-
-    print("{}: {}".format(bot, message))
-
-    if message:
-        message = message.encode('utf-8')
-        message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
-        client_socket.send(message_header + message)
-    
+        print(host_msg)
 
     try:
-        while True:
-            botname_header = client_socket.recv(BYTES)
-            if not len(botname_header):
-                print("Connection closed by the server")
-                sys.exit()
+        split_msg = host_msg.split()
+        action = split_msg[6]
+    except:
+        exit()
 
-            botname_length = int(botname_header.decode('utf-8').strip())
-            botname = client_socket.recv(botname_length).decode('utf-8')
+    random_action = random.choice(["sleep", "paint a wall", "wash my clothes", "kick a ball"])
 
-            message_header = client_socket.recv(BYTES)
-            message_length = int(message_header.decode('utf-8').strip())
-            message = client_socket.recv(1024).decode('utf-8')
+    if bot == 'Amy':
+        message = "{}".format(amy(action))
+    elif bot == 'Jake':
+        message = "{}".format(jake(action, random_action))
+    elif bot == 'Roza':
+        message = "{}".format(roza(action, random_action))
+    elif bot == 'Holt':
+        message = "{}".format(holt(action))
+    else:
+        message = "Host: {} the Bot isn't here today".format(bot)
 
-            print("{}: {}".format(botname, message))
-
-
-    except IOError as e:
-        if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-            print('Reading error', str(e))
-            sys.exit()
-        continue
-
-    except Exception as e:
-        print('General error', str(e))
-        sys.exit()
-
-receive_thread = threading.Thread(target=receive)
-receive_thread.start()
-write_thread = threading.Thread(target=write)
-write_thread.start()
+    client_socket.send(message.encode())
+    print(message)
