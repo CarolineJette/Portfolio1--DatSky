@@ -1,6 +1,7 @@
 import socket
 import select
 import sys
+import random
 
 HEADER_LENGTH = 10
 IP = "127.0.0.1"
@@ -39,8 +40,11 @@ while True:
         if notified_socket == server_socket:
             client_socket, client_address = server_socket.accept()
 
-            client_socket.sendall("Hei fra server til klient!".encode('ascii'))
-            
+            action = random.choice(["sing", "drink", "clean", "eat", "sleep", "study", "think", "work"])
+            host_msg = "Host: Do you guys want to {} today? ".format(action)
+            print(host_msg)
+            client_socket.sendall(host_msg.encode('ascii'))
+
             bot = receive_message(client_socket)
             if bot is False:
                 continue
