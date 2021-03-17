@@ -2,8 +2,8 @@ import socket
 import select
 import sys
 import random
+import threading
 
-HEADER_LENGTH = 10
 IP = "127.0.0.1"
 Port = int(sys.argv[1])
 
@@ -17,6 +17,9 @@ sockets_list = [server_socket]
 
 clients = {}
 
+action = random.choice(["sing", "drink", "clean", "eat", "sleep", "study", "think", "work"])
+host_msg = "Host: Do you guys want to {} today? ".format(action)
+print(host_msg)
 
 def receive_message(client_socket):
     try:
@@ -34,15 +37,14 @@ def receive_message(client_socket):
 
 while True:
     read_sockets, _, exception_sockets = select.select(sockets_list, [], sockets_list)
+    
 
     for notified_socket in read_sockets:
         
         if notified_socket == server_socket:
             client_socket, client_address = server_socket.accept()
 
-            action = random.choice(["sing", "drink", "clean", "eat", "sleep", "study", "think", "work"])
-            host_msg = "Host: Do you guys want to {} today? ".format(action)
-            print(host_msg)
+            
             client_socket.sendall(host_msg.encode('ascii'))
 
             bot = receive_message(client_socket)
@@ -73,3 +75,6 @@ while True:
     for notified_socket in exception_sockets:
         sockets_list.remove(notified_socket)
         del clients[notified_socket]
+
+    thread = threading.Thread(target=receive_message, args=(client_socket,))
+    thread.start()
